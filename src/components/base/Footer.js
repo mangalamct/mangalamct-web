@@ -97,21 +97,7 @@ const Footer = () => {
               {contactData.description}
             </p>
 
-            {/* Registration Details */}
-            {/* <div className="space-y-2 text-sm">
-              <div className="flex items-center space-x-2 text-gray-400">
-                <FileText className="w-4 h-4 text-red-400" />
-                <span>Reg: {contactData.regNo}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <CreditCard className="w-4 h-4 text-red-400" />
-                <span>PAN: {contactData.panNo}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-gray-400">
-                <Shield className="w-4 h-4 text-red-400" />
-                <span>NGO ID: {contactData.ngoDarpanId}</span>
-              </div>
-            </div> */}
+    
           </div>
 
           {/* Quick Links */}

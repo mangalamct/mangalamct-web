@@ -26,8 +26,6 @@ const BannerCom = ({name="",pagetext=""}) => {
                 {name}
               </h1>
             </div>
-            
-    
           </div>
         </div>
       </div>
