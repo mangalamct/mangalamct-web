@@ -6,7 +6,6 @@ const BannerCom = ({name="",pagetext=""}) => {
     <div>
 
           <div className="relative bg-gradient-to-r from-primary to-secondary text-white h-[400px] flex items-center">
-        {/* Background Pattern Overlay */}
         <div className="absolute inset-0 bg-black/10">
         
           <img src="https://balrakshabharat.org/wp-content/themes/ngo/images/nwhmpg/ta-1-1.webp" alt="Background Pattern" className="absolute inset-0 w-full h-full object-cover opacity-[0.4]" />
@@ -14,9 +13,7 @@ const BannerCom = ({name="",pagetext=""}) => {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="flex items-center justify-between">
-            {/* Left Side - Text Content */}
             <div className="flex-1">
-              {/* Breadcrumb */}
               <nav className="flex items-center space-x-2 text-sm mb-6">
                 <Link href="/" className="text-white/80 hover:text-white transition-colors duration-200">
                   Home
@@ -25,7 +22,6 @@ const BannerCom = ({name="",pagetext=""}) => {
                 <span className="text-white font-medium">{pagetext}</span>
               </nav>
               
-              {/* Page Name */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white">
                 {name}
               </h1>
