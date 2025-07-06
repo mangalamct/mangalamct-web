@@ -51,11 +51,11 @@ const Footer = () => {
   ];
 
   const legalPages = [
-    { name: 'Privacy Policy', href: '/' },
-    { name: 'Terms of Service', href: '/' },
-    { name: 'Refund Policy', href: '/' },
-    { name: 'Annual Reports', href: '/' },
-    { name: 'Financial Transparency', href: '/' }
+    { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Terms of Service', href: '/terms-of-service' },
+    { name: 'Refund Policy', href: '/refund-policy' },
+    // { name: 'Annual Reports', href: '/' },
+    // { name: 'Financial Transparency', href: '/' }
   ];
 
   const socialLinks = [

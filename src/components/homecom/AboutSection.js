@@ -8,6 +8,7 @@ import {
   Users,
   Sparkles
 } from 'lucide-react';
+import Link from 'next/link';
 
 const aboutUsHomeSection = {
   title: "About Us",
@@ -19,8 +20,8 @@ const aboutUsHomeSection = {
 
 We remain actively engaged in providing direct community support through regular medical camps, financial aid programs, and emergency assistance to those facing challenging circumstances. Our commitment extends beyond immediate relief to creating sustainable change through skill development programs and educational initiatives that empower individuals to build better futures for themselves and their families.`,
   callToActionLinks: [
-    { label: "Learn More", url: "/about" },
-    { label: "Donate Now", url: "/donate" }
+    { label: "Learn More", url: "/about-us" },
+    { label: "Donate Now", url: "/donation" }
   ]
 };
 
@@ -112,9 +113,10 @@ const AboutSection = () => {
             {/* Call to Action Buttons */}
             <div className="flex flex-wrap gap-4">
               {aboutUsHomeSection.callToActionLinks.map((link, index) => (
+                <Link href={link.url} className=' cursor-pointer'>
                 <button
                   key={index}
-                  className={`px-6 py-3 rounded-full font-semibold transition-all duration-200 flex items-center space-x-2 group ${
+                  className={`px-6 py-3 cursor-pointer rounded-full font-semibold transition-all duration-200 flex items-center space-x-2 group ${
                     index === 0
                       ? 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-dark)] text-white shadow-lg hover:shadow-xl'
                       : 'bg-white border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white shadow-md hover:shadow-lg'
@@ -123,6 +125,7 @@ const AboutSection = () => {
                   <span>{link.label}</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
                 </button>
+                </Link>
               ))}
             </div>
           </div>

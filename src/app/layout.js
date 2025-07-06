@@ -3,6 +3,8 @@ import "./globals.css";
 import Header from "@/components/base/Header";
 import Footer from "@/components/base/Footer";
 import { contactData } from "../../public/data/Constent";
+import FixedDonationButton from "@/components/base/FixedDonationButton";
+import ScrollToTop from "@/components/base/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -259,6 +261,8 @@ export default function RootLayout({ children }) {
         <Header />
         {children}
         <Footer />
+        <FixedDonationButton/>
+        <ScrollToTop/>
       </body>
     </html>
   );

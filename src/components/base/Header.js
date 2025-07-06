@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Phone, Mail, MapPin, Heart, FileText, CreditCard, Shield, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { contactData } from '../../../public/data/Constent';
 
 const Header = () => {
@@ -10,6 +11,9 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [showHeader, setShowHeader] = useState(true);
+  
+  // Get current pathname for active state
+  const pathname = usePathname();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,6 +57,14 @@ const Header = () => {
     { name: 'Get Involved', href: '/volunteer' },
     { name: 'Contact', href: '/contact' }
   ];
+
+  // Function to check if a navigation item is active
+  const isActiveRoute = (href) => {
+    if (href === '/') {
+      return pathname === '/';
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <header className="relative">
@@ -152,16 +164,7 @@ const Header = () => {
             {/* Logo and Brand */}
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className={`bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
-                  isScrolled ? 'w-10 h-10' : 'w-14 h-14'
-                }`}>
-                  <Heart className={`text-white transition-all duration-300 ${
-                    isScrolled ? 'w-5 h-5' : 'w-7 h-7'
-                  }`} />
-                </div>
-                <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-orange-500 rounded-full border-2 border-white flex items-center justify-center">
-                  <Shield className="w-2.5 h-2.5 text-white" />
-                </div>
+                <img src='/images/base/trustLogo.png' className=' w-[70px] h-[70px]' alt='mangalam charitable trust'/>
               </div>
               <div>
                 <h1 className={`font-bold bg-gradient-to-r from-red-600 to-red-800 bg-clip-text text-transparent transition-all duration-300 ${
@@ -183,18 +186,27 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-8">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="text-gray-700 hover:text-red-600 font-medium transition-colors duration-200 relative group py-2"
-                >
-                  <span>
-                    {item.name}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600 transition-all duration-300 group-hover:w-full"></span>
-                  </span>
-                </Link>
-              ))}
+              {navigationItems.map((item) => {
+                const isActive = isActiveRoute(item.href);
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`font-medium transition-all duration-200 relative group py-2 px-2 rounded-lg ${
+                      isActive
+                        ? 'text-red-600 bg-red-50 shadow-sm'
+                        : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                    }`}
+                  >
+                    <span className="relative">
+                      {item.name}
+                      <span className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-red-500 to-red-600 transition-all duration-300 ${
+                        isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`}></span>
+                    </span>
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* Action Buttons & Mobile Menu */}
@@ -209,13 +221,13 @@ const Header = () => {
 
               {/* Donation Button */}
               <Link href={"/donation"}>
-              <button className={`bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center cursor-pointer space-x-2 ${
-                isScrolled ? 'px-3 lg:px-4 py-1.5 lg:py-2' : 'px-4 lg:px-6 py-2 lg:py-2.5'
-              }`}>
-                <Heart className="w-4 h-4" />
-                <span className="hidden sm:inline">Donate Now</span>
-                <span className="sm:hidden">Donate</span>
-              </button>
+                <button className={`bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-full font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center cursor-pointer space-x-2 ${
+                  isScrolled ? 'px-3 lg:px-4 py-1.5 lg:py-2' : 'px-4 lg:px-6 py-2 lg:py-2.5'
+                }`}>
+                  <Heart className="w-4 h-4" />
+                  <span className="hidden sm:inline">Donate Now</span>
+                  <span className="sm:hidden">Donate</span>
+                </button>
               </Link>
 
               {/* Mobile Menu Button */}
@@ -233,16 +245,28 @@ const Header = () => {
         {isMenuOpen && (
           <div className="lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg animate-slideDown mobile-menu-container">
             <div className="px-4 py-4 space-y-3">
-              {navigationItems.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="block text-gray-700 hover:text-red-600 font-medium py-3 px-2 rounded-lg hover:bg-red-50 transition-all duration-200"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
+              {navigationItems.map((item) => {
+                const isActive = isActiveRoute(item.href);
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`block font-medium py-3 px-4 rounded-lg transition-all duration-200 ${
+                      isActive
+                        ? 'text-red-600 bg-red-50 border-l-4 border-red-500 shadow-sm'
+                        : 'text-gray-700 hover:text-red-600 hover:bg-red-50'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <span className="flex items-center justify-between">
+                      {item.name}
+                      {isActive && (
+                        <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      )}
+                    </span>
+                  </Link>
+                );
+              })}
               
               {/* Mobile Contact & Registration Info */}
               <div className="border-t border-gray-200 pt-4 space-y-3">

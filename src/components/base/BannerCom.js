@@ -8,7 +8,7 @@ const BannerCom = ({name="",pagetext=""}) => {
           <div className="relative bg-gradient-to-r from-primary to-secondary text-white h-[400px] flex items-center">
         <div className="absolute inset-0 bg-black/10">
         
-          <img src="https://balrakshabharat.org/wp-content/themes/ngo/images/nwhmpg/ta-1-1.webp" alt="Background Pattern" className="absolute inset-0 w-full h-full object-cover opacity-[0.4]" />
+          <img src="/images/base/bannerImg.webp" alt="Background Pattern" className="absolute inset-0 w-full h-full object-cover opacity-[0.4]" />
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
