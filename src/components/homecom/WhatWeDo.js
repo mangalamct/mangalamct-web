@@ -74,23 +74,17 @@ const AdvancedSlider = () => {
     {
       loop: true,
       mode: "free",
-      slides: {
-        perView: 4,
-        spacing: 16,
-      },
+     
       breakpoints: {
-        "(max-width: 768px)": {
-          slides: {
-            perView: 1,
-            spacing: 16,
-          },
-        },
-        "(max-width: 1024px)": {
-          slides: {
-            perView: 2,
-            spacing: 16,
-          },
-        },
+           "(min-width: 400px)": {
+        slides: { perView: 2, spacing: 5 },
+      },
+      "(min-width: 1000px)": {
+        slides: { perView: 3, spacing: 10 },
+      },
+       "(min-width: 1280px)": {
+        slides: { perView: 4, spacing: 10 },
+      }
       },
       slideChanged(slider) {
         setCurrentSlide(slider.track.details.rel);

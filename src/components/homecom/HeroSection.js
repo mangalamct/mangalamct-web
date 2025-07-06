@@ -113,7 +113,26 @@ const HeroSection = () => {
 
   return (
     <div className="relative w-full h-[calc(100vh-140px)] overflow-hidden">
-      <div ref={sliderRef} className="keen-slider h-full">
+      {/* Loading state */}
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 z-30">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-white text-sm">Loading...</p>
+          </div>
+        </div>
+      )}
+
+      <div 
+        ref={sliderRef} 
+        className={`keen-slider h-full transition-opacity duration-500 ${
+          loaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          // Hide all slides initially until slider is loaded
+          visibility: loaded ? 'visible' : 'hidden'
+        }}
+      >
         {heroSlides.map((slide, idx) => (
           <div key={slide.id} className={`keen-slider__slide number-slide${slide.id} relative`}>
             {/* Background with gradient overlay */}
@@ -121,20 +140,22 @@ const HeroSection = () => {
             
             {/* Background image */}
             <div 
-              className="absolute inset-0 "
+              className="absolute inset-0"
               style={{
-                // backgroundImage: `url(${slide.image})`,
                 filter: 'brightness(0.3)'
               }}
             >
-                <img src={slide.image} alt={slide.title} className="w-full h-full object-fill" />
+              <img 
+                src={slide.image} 
+                alt={slide.title} 
+                className="w-full h-full object-cover"
+                loading={idx === 0 ? "eager" : "lazy"}
+              />
             </div>
             
             {/* Content overlay */}
             <div className="relative z-10 flex items-center justify-center h-full px-4 sm:px-6 lg:px-8">
               <div className="max-w-5xl mx-auto text-center">
-                {/* Trust Information */}
-               
                 {/* Animated subtitle */}
                 <div className="mb-4 opacity-90">
                   <span className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs sm:text-sm font-medium text-white border border-white/30">
@@ -169,17 +190,8 @@ const HeroSection = () => {
                     <span className="relative z-10">{slide.buttonSecondary}</span>
                   </button>
                 </div>
-                
-                {/* Trust Mission Statement */}
-                {/* <div className="mt-8 sm:mt-12 opacity-80">
-                  <p className="text-xs sm:text-sm text-white/80 max-w-3xl mx-auto leading-relaxed">
-                    "Dedicated to improving the lives of underprivileged communities through education, healthcare, and social welfare initiatives."
-                  </p>
-                </div> */}
               </div>
             </div>
-            
-           
           </div>
         ))}
       </div>
