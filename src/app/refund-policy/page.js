@@ -344,7 +344,7 @@ const RefundPolicyPage = () => {
                   <h4 className="text-lg font-semibold text-yellow-800 mb-3">Important Notes</h4>
                   <ul className="space-y-2 text-yellow-700">
                     <li>• <strong>Review Process:</strong> Each request is individually reviewed by our finance team</li>
-                    <li>• <strong>Payment Method:</strong> Refunds are processed to the original payment method only</li>
+                    <li>• <strong>Payment Method:</strong> Refunds are credited to the original payment method within 7 to 14 days.</li>
                     <li>• <strong>Bank Processing:</strong> Additional processing time may be required by your bank</li>
                     <li>• <strong>International Transactions:</strong> May take longer due to currency conversion</li>
                   </ul>

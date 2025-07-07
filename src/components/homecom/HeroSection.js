@@ -174,7 +174,7 @@ const HeroSection = () => {
                 </p>
                 
                 {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
+                {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
                   <button 
                     className="group relative px-4 sm:px-6 py-2 sm:py-3 bg-white text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm sm:text-base"
                     style={{
@@ -189,7 +189,7 @@ const HeroSection = () => {
                   <button className="group px-4 sm:px-6 py-2 sm:py-3 bg-transparent text-white font-semibold rounded-lg border-2 border-white/50 hover:bg-white/10 hover:border-white transition-all duration-300 transform hover:scale-105 backdrop-blur-sm text-sm sm:text-base">
                     <span className="relative z-10">{slide.buttonSecondary}</span>
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

@@ -52,9 +52,9 @@ const Header = () => {
   const navigationItems = [
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about-us' },
-    { name: 'Programs', href: '/programs' },
-    { name: 'Impact', href: '/impact' },
-    { name: 'Get Involved', href: '/volunteer' },
+    // { name: 'Programs', href: '/programs' },
+    // { name: 'Impact', href: '/impact' },
+    // { name: 'Get Involved', href: '/volunteer' },
     { name: 'Contact', href: '/contact' }
   ];
 
@@ -198,7 +198,7 @@ const Header = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
+            <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8 mr-5">
               {navigationItems.map((item) => {
                 const isActive = isActiveRoute(item.href);
                 return (
@@ -241,7 +241,7 @@ const Header = () => {
                   <span className="text-xs sm:text-sm">
                     <span className="hidden xs:inline sm:hidden">Donate</span>
                     <span className="hidden sm:inline">Donate Now</span>
-                    <span className="xs:hidden">♥</span>
+                    {/* <span className="xs:hidden">♥</span> */}
                   </span>
                 </button>
               </Link>
@@ -260,7 +260,7 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="lg:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg animate-slideDown mobile-menu-container">
-            <div className="px-4 py-4 space-y-2">
+            <div className="px-4 py-4 space-y-2 ">
               {navigationItems.map((item) => {
                 const isActive = isActiveRoute(item.href);
                 return (

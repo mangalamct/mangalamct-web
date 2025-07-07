@@ -34,9 +34,9 @@ const Footer = () => {
 
   const quickLinks = [
     { name: 'About Us', href: '/about-us' },
-    { name: 'Our Programs', href: '/programs' },
-    { name: 'Impact Stories', href: '/impact' },
-    { name: 'Get Involved', href: '/volunteer' },
+    // { name: 'Our Programs', href: '/programs' },
+    // { name: 'Impact Stories', href: '/impact' },
+    // { name: 'Get Involved', href: '/volunteer' },
     { name: 'Donate Now', href: '/donation' },
     { name: 'Contact Us', href: '/contact' }
   ];
@@ -69,7 +69,7 @@ const Footer = () => {
     <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       {/* Main Footer Content */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-[5%] py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           
           {/* Organization Info */}
           <div className="lg:col-span-1">
@@ -119,7 +119,7 @@ const Footer = () => {
           </div>
 
           {/* Programs */}
-          <div>
+          {/* <div>
             <h4 className="text-lg font-semibold mb-6 text-white">Our Programs</h4>
             <ul className="space-y-3">
               {programs.map((program) => (
@@ -134,7 +134,7 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-          </div>
+          </div> */}
 
           {/* Contact & Social */}
           <div>

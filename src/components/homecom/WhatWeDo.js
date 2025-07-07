@@ -218,8 +218,8 @@ const AdvancedSlider = () => {
                         </div>
 
                         {/* Content Section */}
-                        <div className="p-6 flex flex-col justify-between h-[250px]">
-                          <div className="flex-1 h-[250px]">
+                        <div className="p-6 flex flex-col justify-between ">
+                          <div className="">
                             <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors duration-300">
                               {area.title}
                             </h3>
@@ -230,12 +230,12 @@ const AdvancedSlider = () => {
                           </div>
 
                           {/* Read More Button */}
-                          <div className="mt-4">
+                          {/* <div className="mt-4">
                             <button className="inline-flex items-center space-x-2 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] hover:from-[var(--color-primary-dark)] hover:to-[var(--color-secondary-dark)] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 group/btn shadow-md hover:shadow-lg">
                               <span>Read More</span>
                               <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform duration-300" />
                             </button>
-                          </div>
+                          </div> */}
                         </div>
 
                         {/* Hover Effect Border */}
