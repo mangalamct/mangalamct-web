@@ -1,9 +1,12 @@
 import PaymentFailure from '@/components/screens/PaymentFailure';
-import React from 'react';
+import React, { Suspense } from 'react';
 const PaymentFailurePage = () => {
  
   return (
-   <PaymentFailure/>
+      <Suspense fallback={<div>Loading...</div>}>
+
+        <PaymentFailure/>
+      </Suspense>
   );
 };
 
