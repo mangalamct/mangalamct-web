@@ -1,11 +1,13 @@
 import DonationPage from '@/components/screens/DonationPage'
-import React from 'react'
+import React, { Suspense } from 'react'
 
 const page = () => {
   return (
-    <div>
+    
+          <Suspense fallback={<div>Loading...</div>}>
+    
         <DonationPage/>
-    </div>
+    </Suspense>
   )
 }
 
