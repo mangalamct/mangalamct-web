@@ -1,8 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-// import { useAuthState } from 'react-firebase-hooks/auth';
-// import { auth } from '../../lib/firebase';
+
 import { CheckCircleOutlined, LoadingOutlined, HomeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Card, Button, Typography, Space, Descriptions, Spin, Alert, Result } from 'antd';
 import { contactData } from '../../../public/data/Constent';
@@ -18,10 +17,7 @@ const PaymentSuccessPage = () => {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // if (!user) {
-    //   setLoading(false);
-    //   return;
-    // }
+  
 
     const fetchPaymentData = async () => {
       try {
