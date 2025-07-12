@@ -6,12 +6,17 @@ import {
   Globe, ArrowRight, Lock, Calendar, User, DollarSign, ChevronLeft, 
   Gift, TrendingUp, Target, Banknote, Landmark, QrCode, Info, AlertCircle 
 } from 'lucide-react';
+import axios from 'axios';
+
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import DonationForm from '../common/DonationForm';
+import { db } from '../../../lib/firebase';
 
 const DonationPage = () => {
   const [selectedAmount, setSelectedAmount] = useState('');
   const [customAmount, setCustomAmount] = useState('');
   const [donationType, setDonationType] = useState('one-time');
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [paymentMethod, setPaymentMethod] = useState('online');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -31,12 +36,15 @@ const DonationPage = () => {
   });
   const [formErrors, setFormErrors] = useState({});
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   const predefinedAmounts = [500, 1000, 2500, 5000, 10000, 25000];
   const bankDetails = {
     accountName: "Mangalam charitable trust",
     accountNumber: "029110100000360",
     ifscCode: "NKGS0000029",
-    bankName: "NKGSB Co-Operative Bank Ltd.",
+    bankName: "NKGSB Co-Operative Bank Ltd.",
     branch: "PAREL MUMBAI-400012",
     upiId: "@hdfc"
   };
@@ -63,21 +71,6 @@ const DonationPage = () => {
 
   const getCurrentAmount = () => {
     return customAmount || selectedAmount;
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    if (formErrors[name]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
   };
 
   const validateForm = () => {
@@ -122,6 +115,22 @@ const DonationPage = () => {
     }
   };
 
+  // Save donation data to Firebase
+  const saveDonationToFirebase = async (donationData) => {
+    try {
+      const docRef = await addDoc(collection(db, 'public_donations'), {
+        ...donationData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      console.log('Donation saved to Firebase with ID: ', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('Error saving donation to Firebase: ', error);
+      throw error;
+    }
+  };
+
   const handleDonateClick = async () => {
     const amount = getCurrentAmount();
     if (!amount || amount < 1) {
@@ -130,29 +139,81 @@ const DonationPage = () => {
     }
 
     setIsSubmitting(true);
-    
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      // Prepare donation data
+      const donationData = {
+        amount: parseInt(amount),
+        donationType: donationType,
+        paymentMethod: paymentMethod,
+        fullName: formData.fullName,
+        email: formData.email,
+        phoneNo: formData.phoneNo,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        panNo: formData.panNo || null,
+        nationality: formData.nationality,
+        status: paymentMethod === 'banktransfer' ? 'pending' : 'initiated'
+      };
+
+      // Save to Firebase first
+      // const firebaseDocId = await saveDonationToFirebase(donationData);
+
+      if (paymentMethod === 'online') {
+        // Online payment - initiate PhonePe payment
+        const paymentData = {
+          amount: amount,
+          name: formData.fullName,
+          email: formData.email,
+          mobileNumber: formData.phoneNo,
+          address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          pincode: formData.pincode,
+          panNo: formData.panNo,// Include Firebase document ID for reference
+        };
+
+        console.log("Payment data:", paymentData);
+        
+        const response = await axios.post('/api/initiate-phonepe-payment', paymentData);
+        console.log("Payment response:", response.data);
+        
+        // Redirect to payment gateway
+        window.location.href = response.data.url;
+      } else {
+        // Bank transfer - show success message
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          // Reset form
+          setCurrentStep(1);
+          setFormData({
+            fullName: '',
+            email: '',
+            phoneNo: '',
+            address: '',
+            city: '',
+            state: '',
+            pincode: '',
+            panNo: '',
+            aadharNo: '',
+            nationality: 'Indian'
+          });
+          setSelectedAmount('');
+          setCustomAmount('');
+          setFormErrors({});
+          setShowBankDetails(false);
+        }, 4000);
+      }
+    } catch (error) {
+      console.error('Error processing donation:', error);
+      setError("Failed to process donation. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 4000);
-      
-      setCurrentStep(1);
-      setFormData({
-        fullName: '',
-        email: '',
-        phoneNo: '',
-        address: '',
-        city: '',
-        state: '',
-        pincode: '',
-        panNo: '',
-        aadharNo: '',
-        nationality: 'Indian'
-      });
-      setSelectedAmount('');
-      setCustomAmount('');
-      setFormErrors({});
-    }, 2000);
+    }
   };
 
   const copyToClipboard = (text) => {
@@ -175,16 +236,36 @@ const DonationPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full text-center animate-bounce-in">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-800 mb-2">Donation Successful!</h3>
+            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+              {paymentMethod === 'banktransfer' ? 'Bank Transfer Details Received!' : 'Donation Successful!'}
+            </h3>
             <p className="text-gray-600 mb-6">
-              Thank you for your generous donation of {formatCurrency(getCurrentAmount())}. 
-              A receipt has been sent to your email.
+              {paymentMethod === 'banktransfer' 
+                ? `Thank you for choosing bank transfer for your donation of ${formatCurrency(getCurrentAmount())}. Please transfer the amount using the provided bank details. We will verify and confirm your donation once the payment is received.`
+                : `Thank you for your generous donation of ${formatCurrency(getCurrentAmount())}. A receipt has been sent to your email.`
+              }
             </p>
             <button
               onClick={() => setShowSuccess(false)}
               className="w-full py-3 bg-green-500 text-white rounded-xl font-semibold hover:bg-green-600 transition-colors"
             >
               Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" />
+            <span>{error}</span>
+            <button 
+              onClick={() => setError(null)}
+              className="ml-2 text-white hover:text-gray-200"
+            >
+              ×
             </button>
           </div>
         </div>
@@ -234,202 +315,9 @@ const DonationPage = () => {
                   <h2 className="text-3xl font-bold text-gray-800 mb-2">Personal Information</h2>
                   <p className="text-gray-600">Please provide your details for the donation receipt</p>
                 </div>
+         
+                <DonationForm formData={formData} formErrors={formErrors} setFormData={setFormData} setFormErrors={setFormErrors} />
                 
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Full Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="fullName"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                        formErrors.fullName ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                      }`}
-                      placeholder="Enter your full name"
-                    />
-                    {formErrors.fullName && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" /> {formErrors.fullName}
-                    </p>}
-                  </div>
-
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="your@email.com"
-                      />
-                      {formErrors.email && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.email}
-                      </p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Phone Number <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        name="phoneNo"
-                        value={formData.phoneNo}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.phoneNo ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="+91 9876543210"
-                      />
-                      {formErrors.phoneNo && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.phoneNo}
-                      </p>}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Address <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      rows={3}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                        formErrors.address ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                      }`}
-                      placeholder="Enter your complete address"
-                    />
-                    {formErrors.address && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                      <AlertCircle className="w-4 h-4" /> {formErrors.address}
-                    </p>}
-                  </div>
-
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        City <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.city ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="City"
-                      />
-                      {formErrors.city && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.city}
-                      </p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        State <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.state ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="State"
-                      />
-                      {formErrors.state && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.state}
-                      </p>}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Pincode <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="pincode"
-                        value={formData.pincode}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.pincode ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="400001"
-                      />
-                      {formErrors.pincode && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.pincode}
-                      </p>}
-                    </div>
-                  </div>
-
-                  <div className="w-full">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        PAN Number <span className="text-gray-500">(Optional, for 80G receipt)</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="panNo"
-                        value={formData.panNo}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.panNo ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="ABCDE1234F"
-                        style={{ textTransform: 'uppercase' }}
-                      />
-                      {formErrors.panNo && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.panNo}
-                      </p>}
-                    </div>
-
-                    {/* <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Aadhar Number <span className="text-gray-500">(Optional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="aadharNo"
-                        value={formData.aadharNo}
-                        onChange={handleInputChange}
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors ${
-                          formErrors.aadharNo ? 'border-red-500 bg-red-50' : 'border-gray-200 focus:border-red-500'
-                        }`}
-                        placeholder="1234 5678 9012"
-                      />
-                      {formErrors.aadharNo && <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" /> {formErrors.aadharNo}
-                      </p>}
-                    </div> */}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Nationality <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      name="nationality"
-                      value={formData.nationality}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-red-500 focus:outline-none transition-colors"
-                    >
-                      <option value="Indian">Indian</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-                </div>
-
                 <button
                   onClick={handleNextStep}
                   className="w-full mt-8 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold text-lg hover:from-red-700 hover:to-red-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
@@ -465,37 +353,6 @@ const DonationPage = () => {
                     <ChevronLeft className="w-4 h-4" />
                     Edit Information
                   </button>
-                </div>
-
-                {/* Donation Type */}
-                <div className="mb-8">
-                  <h3 className="font-semibold text-gray-800 mb-4">Donation Type</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setDonationType('one-time')}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                        donationType === 'one-time'
-                          ? 'border-red-500 bg-red-50 text-red-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <Gift className="w-6 h-6 mx-auto mb-2" />
-                      <div className="font-semibold">One-time</div>
-                      <div className="text-sm text-gray-600">Make a single donation</div>
-                    </button>
-                    <button
-                      onClick={() => setDonationType('monthly')}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-                        donationType === 'monthly'
-                          ? 'border-red-500 bg-red-50 text-red-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <TrendingUp className="w-6 h-6 mx-auto mb-2" />
-                      <div className="font-semibold">Monthly</div>
-                      <div className="text-sm text-gray-600">Recurring donation</div>
-                    </button>
-                  </div>
                 </div>
 
                 {/* Amount Selection */}
@@ -537,49 +394,25 @@ const DonationPage = () => {
                 {/* Payment Method */}
                 <div className="mb-8">
                   <h3 className="font-semibold text-gray-800 mb-4">Payment Method</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button
-                      onClick={() => setPaymentMethod('upi')}
+                      onClick={() => {
+                        setPaymentMethod('online');
+                        setShowBankDetails(false);
+                      }}
                       className={`p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 ${
-                        paymentMethod === 'upi'
-                          ? 'border-red-500 bg-red-50 text-red-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <Smartphone className="w-6 h-6" />
-                      <div className="text-left">
-                        <div className="font-semibold">UPI</div>
-                        <div className="text-sm text-gray-600">Pay using UPI apps</div>
-                      </div>
-                    </button>
-                    <button
-                      onClick={() => setPaymentMethod('card')}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 ${
-                        paymentMethod === 'card'
+                        paymentMethod === 'online'
                           ? 'border-red-500 bg-red-50 text-red-700'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <CreditCard className="w-6 h-6" />
                       <div className="text-left">
-                        <div className="font-semibold">Credit/Debit Card</div>
-                        <div className="text-sm text-gray-600">Pay using card</div>
+                        <div className="font-semibold">Online Payment</div>
+                        <div className="text-sm text-gray-600">Pay securely online</div>
                       </div>
                     </button>
-                    <button
-                      onClick={() => setPaymentMethod('netbanking')}
-                      className={`p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3 ${
-                        paymentMethod === 'netbanking'
-                          ? 'border-red-500 bg-red-50 text-red-700'
-                          : 'border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      <Building2 className="w-6 h-6" />
-                      <div className="text-left">
-                        <div className="font-semibold">Net Banking</div>
-                        <div className="text-sm text-gray-600">Pay using online banking</div>
-                      </div>
-                    </button>
+
                     <button
                       onClick={() => {
                         setPaymentMethod('banktransfer');
@@ -608,14 +441,6 @@ const DonationPage = () => {
                         <Banknote className="w-5 h-5" />
                         Bank Transfer Details
                       </h3>
-                      <button 
-                        onClick={() => setShowBankDetails(false)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
                     </div>
                     
                     <div className="space-y-4">
@@ -625,8 +450,7 @@ const DonationPage = () => {
                           <span className="font-semibold">{bankDetails.accountName}</span>
                           <button 
                             onClick={() => copyToClipboard(bankDetails.accountName)}
-                            className="text-blue-500 hover:text-blue-700"
-                            title="Copy to clipboard"
+                            className="text-blue-500 hover:text-blue-700 text-sm"
                           >
                             {copied ? 'Copied!' : 'Copy'}
                           </button>
@@ -639,8 +463,7 @@ const DonationPage = () => {
                           <span className="font-semibold">{bankDetails.accountNumber}</span>
                           <button 
                             onClick={() => copyToClipboard(bankDetails.accountNumber)}
-                            className="text-blue-500 hover:text-blue-700"
-                            title="Copy to clipboard"
+                            className="text-blue-500 hover:text-blue-700 text-sm"
                           >
                             {copied ? 'Copied!' : 'Copy'}
                           </button>
@@ -653,8 +476,7 @@ const DonationPage = () => {
                           <span className="font-semibold">{bankDetails.ifscCode}</span>
                           <button 
                             onClick={() => copyToClipboard(bankDetails.ifscCode)}
-                            className="text-blue-500 hover:text-blue-700"
-                            title="Copy to clipboard"
+                            className="text-blue-500 hover:text-blue-700 text-sm"
                           >
                             {copied ? 'Copied!' : 'Copy'}
                           </button>
@@ -674,45 +496,7 @@ const DonationPage = () => {
                       <div className="pt-4 border-t border-blue-200">
                         <div className="flex items-center gap-2 text-sm text-blue-700 mb-2">
                           <Info className="w-4 h-4" />
-                          <span>After making the transfer, please share the transaction details with us.</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* UPI QR Code */}
-                {paymentMethod === 'upi' && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6 mb-8">
-                    <h3 className="font-semibold text-purple-800 mb-4 flex items-center gap-2">
-                      <QrCode className="w-5 h-5" />
-                      Scan UPI QR Code
-                    </h3>
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                      <div className="bg-white p-4 rounded-lg border border-purple-300">
-                        <div className="w-48 h-48 bg-gray-200 flex items-center justify-center text-gray-500">
-                          [UPI QR Code Image]
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-sm text-purple-700">UPI ID:</p>
-                            <div className="flex items-center gap-2">
-                              <p className="font-bold text-purple-900">{bankDetails.upiId}</p>
-                              <button 
-                                onClick={() => copyToClipboard(bankDetails.upiId)}
-                                className="text-purple-600 hover:text-purple-800 text-sm"
-                              >
-                                {copied ? 'Copied!' : 'Copy'}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="text-sm text-purple-700">
-                            <p>1. Open any UPI app on your phone</p>
-                            <p>2. Scan the QR code or enter UPI ID</p>
-                            <p>3. Enter amount and complete payment</p>
-                          </div>
+                          <span>After making the transfer, your donation will be recorded as pending verification. We will confirm once the payment is received.</span>
                         </div>
                       </div>
                     </div>
@@ -738,7 +522,7 @@ const DonationPage = () => {
                       <div className="flex justify-between">
                         <span>Payment:</span>
                         <span className="font-semibold capitalize">
-                          {paymentMethod === 'banktransfer' ? 'Bank Transfer' : paymentMethod}
+                          {paymentMethod === 'banktransfer' ? 'Bank Transfer' : 'Online Payment'}
                         </span>
                       </div>
                     </div>
@@ -749,7 +533,7 @@ const DonationPage = () => {
                 <button
                   onClick={handleDonateClick}
                   disabled={!getCurrentAmount() || isSubmitting}
-                  className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
+                  className={`w-full cursor-pointer py-4 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg flex items-center justify-center gap-2 ${
                     !getCurrentAmount()
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800 transform hover:scale-105 hover:shadow-xl'
@@ -765,7 +549,10 @@ const DonationPage = () => {
                     </>
                   ) : (
                     <>
-                      {paymentMethod === 'banktransfer' ? 'I have transferred the amount' : `Donate ${formatCurrency(getCurrentAmount())}`}
+                      {paymentMethod === 'banktransfer' 
+                        ? `Submit Bank Transfer Details` 
+                        : `Pay ${formatCurrency(getCurrentAmount())}`
+                      }
                       <Heart className="w-5 h-5" />
                     </>
                   )}
@@ -774,13 +561,16 @@ const DonationPage = () => {
                 {/* Security Assurance */}
                 <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
                   <Lock className="w-4 h-4" />
-                  <span>Secure payment processing</span>
+                  <span>
+                    {paymentMethod === 'banktransfer' 
+                      ? 'Your information is stored securely' 
+                      : 'Secure payment processing'
+                    }
+                  </span>
                 </div>
               </div>
             )}
           </div>
-
-    
         </div>
       </div>
     </div>
