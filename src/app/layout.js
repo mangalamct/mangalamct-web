@@ -1,10 +1,9 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/base/Header";
-import Footer from "@/components/base/Footer";
+
 import { contactData } from "../../public/data/Constent";
-import FixedDonationButton from "@/components/base/FixedDonationButton";
-import ScrollToTop from "@/components/base/ScrollToTop";
+
+import Layout from "@/components/base/Layout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -207,7 +206,7 @@ const generateJsonLd = () => {
 
 export default function RootLayout({ children }) {
   const jsonLd = generateJsonLd();
-
+  
   return (
     <html lang="en">
       <head>
@@ -259,11 +258,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
-        {children}
-        <Footer />
-        <FixedDonationButton/>
-        <ScrollToTop/>
+<Layout>
+  {children}
+</Layout>
       </body>
     </html>
   );

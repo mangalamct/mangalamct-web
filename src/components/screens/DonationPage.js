@@ -70,6 +70,7 @@ const DonationPage = () => {
   };
 
   const getCurrentAmount = () => {
+    
     return customAmount || selectedAmount;
   };
 
@@ -93,10 +94,7 @@ const DonationPage = () => {
       errors.panNo = 'PAN format is invalid (e.g., ABCDE1234F)';
     }
     
-    if (formData.aadharNo && !/^\d{12}$/.test(formData.aadharNo.replace(/\s/g, ''))) {
-      errors.aadharNo = 'Aadhar number must be 12 digits';
-    }
-    
+ 
     return errors;
   };
 
@@ -115,21 +113,7 @@ const DonationPage = () => {
     }
   };
 
-  // Save donation data to Firebase
-  const saveDonationToFirebase = async (donationData) => {
-    try {
-      const docRef = await addDoc(collection(db, 'public_donations'), {
-        ...donationData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-      console.log('Donation saved to Firebase with ID: ', docRef.id);
-      return docRef.id;
-    } catch (error) {
-      console.error('Error saving donation to Firebase: ', error);
-      throw error;
-    }
-  };
+
 
   const handleDonateClick = async () => {
     const amount = getCurrentAmount();
