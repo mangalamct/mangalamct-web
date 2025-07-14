@@ -73,7 +73,7 @@ console.log(memberData,'memberData')
     if (!redirectUrl) throw new Error('Redirect URL missing in collect response');
     await db.collection("paymentInitiate").doc(orderId).set({
 ...memberData,
-registrationNumber:memberData?.memberRegNo,
+registrationNumber:memberData?.memberRegNo || 'N/A',
  amount:amount,
   orderId,
   status: 'initiated',
