@@ -1,8 +1,12 @@
-import React from 'react'
+import PaymentPage from '@/components/screens/member-payment/PaymentPage'
+import React, { Suspense } from 'react'
 
-const page = () => {
+const page = ({params}) => {
+
   return (
-    <div>page</div>
+  <Suspense fallback={<div>Loading...</div>}>
+      <PaymentPage/>
+        </Suspense>
   )
 }
 

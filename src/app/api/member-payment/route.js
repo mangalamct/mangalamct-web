@@ -28,31 +28,8 @@ console.log(memberData,'memberData')
         merchantUrls: {
          redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL+'/api/payment-status/'}?id=${orderId}`,
         }
-      },  "paymentModeConfig": {
-            "enabledPaymentModes": [
-                {
-                    "type": "UPI_INTENT"
-                },
-                {
-                    "type": "UPI_COLLECT"
-                },
-                {
-                    "type": "UPI_QR"
-                },
-                {
-                    "type": "NET_BANKING"
-                },
-                {
-                    "type": "CARD",
-                    "cardTypes": [
-                        "DEBIT_CARD",
-                        "CREDIT_CARD"
-                    ]
-                }
-            ],
-      
-           
-        }
+      },  
+    
     };
 
     // Step 3: Call Collect API
