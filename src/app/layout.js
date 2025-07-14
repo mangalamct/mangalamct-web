@@ -254,6 +254,8 @@ export default function RootLayout({ children }) {
         <meta name="DC.language" content="en-IN" />
         <meta name="DC.type" content="Text" />
         <meta name="DC.subject" content="charity, non-profit, education, healthcare, social welfare" />
+        <meta name="google-site-verification" content="flWCndGUjr8U35C50snc8o02Hh3gXwqxMW9M_JkwP5k" />
+        <meta name="msvalidate.01" content="63957D669D5E8771E086E22F34FDA836" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
