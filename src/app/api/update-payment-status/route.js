@@ -78,6 +78,7 @@ async function processActiveProgramTransaction(transactionId, transactionData, c
   // Add to program-specific transactions collection
   await db.collection('programs').doc(activeID).collection('transactions').doc(transactionId).set(combinedData);
 
+  
   // Add to program-specific member's donations subcollection
   await db.collection('programs').doc(activeID).collection('members').doc(paymentData.memberId).collection('donations').doc(transactionId).set(combinedData);
 
