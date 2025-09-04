@@ -5,8 +5,8 @@ if (!admin.apps.length) {
     admin.initializeApp({
       credential: cert({
         projectId:process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.NEXT_PUBLIC_FIREBASE_ADMIN_CLIENT_EMAIL,
-        privateKey: process.env.NEXT_PUBLIC_FIREBASE_ADMIN_PK.replace(/\\n/g, '\n'),
+        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_ADMIN_PK.replace(/\\n/g, '\n'),
       }),
       storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
     });
