@@ -1,7 +1,8 @@
 import { StandardCheckoutClient, Env } from 'pg-sdk-node';
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+
 import { FieldValue } from 'firebase-admin/firestore';
+import { db } from '../admin';
 
 // --- Configuration Setup (using environment variables) ---
 
