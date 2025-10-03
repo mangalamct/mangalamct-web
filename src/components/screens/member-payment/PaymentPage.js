@@ -1,16 +1,16 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { CreditCardOutlined, LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { Card, Typography, Spin, Button, Alert } from 'antd';
+import React, { useEffect, useState, useRef } from 'react';
+import { CreditCardOutlined, LoadingOutlined, ExclamationCircleOutlined, SafetyOutlined } from '@ant-design/icons';
+import { Card, Typography, Spin, Button, Alert, Space } from 'antd';
 import { contactData } from '../../../../public/data/Constent';
 
 const { Title, Paragraph } = Typography;
 
 const decryptData = (encryptedData) => {
   try {
-    const jsonString = atob(encryptedData); // Base64 decoding
+    const jsonString = atob(encryptedData);
     return JSON.parse(jsonString);
   } catch (error) {
     console.error('Error decrypting data:', error);
@@ -24,105 +24,87 @@ const PaymentPage = () => {
   const decodedData = encodedData ? decryptData(encodedData) : null;
   
   const [loading, setLoading] = useState(true);
-  const [redirecting, setRedirecting] = useState(false);
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(3);
   const [error, setError] = useState(null);
   const [paymentUrl, setPaymentUrl] = useState(null);
+  
+  const apiCallMade = useRef(false);
+  const countdownInterval = useRef(null);
 
   const getPayUrlFromBe = async () => {
+    if (apiCallMade.current) return;
+    apiCallMade.current = true;
+
     try {
       setLoading(true);
       setError(null);
 
       const response = await fetch(`/api/member-payment`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(decodedData),
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Payment API error:', response.status, errorText);
-        throw new Error(`Payment API error: ${response.status}`);
-      }
-      
       const result = await response.json();
       
-      if (result.url) {
+      // Check if response has url field
+      if (result.success && result.url) {
         setPaymentUrl(result.url);
         setLoading(false);
-        // Start countdown for auto-redirect
-        startCountdown();
+        startCountdown(result.url);
+      } else if (result.url) {
+        // Even without success field, if url exists
+        setPaymentUrl(result.url);
+        setLoading(false);
+        startCountdown(result.url);
       } else {
-        throw new Error('No payment URL received from server');
+        throw new Error('No payment URL received');
       }
     } catch (err) {
-      console.error('Error getting payment URL:', err);
-      setError(err.message || 'Failed to get payment URL');
+      console.error('Error:', err);
+      setError('Failed to initialize payment');
       setLoading(false);
+      apiCallMade.current = false;
     }
   };
 
-  useEffect(() => {
-    // Validate decoded data
-    if (!decodedData) {
-      setError('Invalid or missing payment data');
-      setLoading(false);
-      return;
-    }
-
-    // Get payment URL from backend
-    getPayUrlFromBe();
-  }, [decodedData]);
-
-  const startCountdown = () => {
-    setRedirecting(true);
-    const countdownInterval = setInterval(() => {
+  const startCountdown = (url) => {
+    countdownInterval.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(countdownInterval);
-          handleRedirect();
+          clearInterval(countdownInterval.current);
+          window.location.href = url;
           return 0;
         }
         return prev - 1;
       });
-    }, 1000); // Changed to 1 second for proper countdown
+    }, 1000);
   };
 
-  const handleRedirect = () => {
+  const handleRedirectNow = () => {
+    if (countdownInterval.current) {
+      clearInterval(countdownInterval.current);
+    }
     if (paymentUrl) {
-      try {
-        window.location.href = paymentUrl;
-      } catch (err) {
-        console.error('Redirect error:', err);
-        setError('Failed to redirect to payment gateway');
-        setRedirecting(false);
-        setCountdown(5); // Reset countdown
-      }
-    } else {
-      setError('Payment URL not available');
-      setRedirecting(false);
+      window.location.href = paymentUrl;
     }
   };
 
-  const handleManualRedirect = () => {
-    if (paymentUrl) {
-      setRedirecting(true);
-      setCountdown(0);
-      handleRedirect();
-    } else {
-      setError('Payment URL not available');
+  useEffect(() => {
+    if (!decodedData) {
+      setError('Invalid payment data');
+      setLoading(false);
+      return;
     }
-  };
 
-  const handleRetry = () => {
-    setError(null);
-    setCountdown(5);
-    setRedirecting(false);
     getPayUrlFromBe();
-  };
+
+    return () => {
+      if (countdownInterval.current) {
+        clearInterval(countdownInterval.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -131,12 +113,20 @@ const PaymentPage = () => {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '100vh',
-        backgroundColor: '#f0f2f5'
+        backgroundColor: '#f5f5f5'
       }}>
-        <Card style={{ textAlign: 'center', minWidth: 300 }}>
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
-          <Paragraph style={{ marginTop: 16 }}>
-            Preparing payment gateway...
+        <Card style={{ 
+          textAlign: 'center', 
+          minWidth: 320,
+          borderRadius: 16,
+          padding: 24
+        }}>
+          <Spin indicator={<LoadingOutlined style={{ fontSize: 48, color: '#ff4d4f' }} spin />} />
+          <Title level={4} style={{ marginTop: 24 }}>
+            Initializing Payment
+          </Title>
+          <Paragraph style={{ color: '#666' }}>
+            Please wait...
           </Paragraph>
         </Card>
       </div>
@@ -146,183 +136,110 @@ const PaymentPage = () => {
   if (error) {
     return (
       <div style={{ 
-        backgroundColor: '#f0f2f5',
+        backgroundColor: '#f5f5f5',
         minHeight: '100vh',
-        padding: '20px'
+        padding: 24,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
       }}>
-        <div style={{ 
-          width: '100%',
-          maxWidth: 1000, 
-          margin: '0 auto',
-          paddingTop: '40px'
-        }}>
-          <Card
-            style={{
-              borderRadius: 12,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-              background: 'linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%)',
-              color: 'white',
-              marginBottom: 24
-            }}
-          >
-            <div style={{ textAlign: 'center', padding: '20px 0' }}>
-              <ExclamationCircleOutlined 
-                style={{ 
-                  fontSize: 72, 
-                  color: '#fff',
-                  marginBottom: 16
-                }} 
-              />
-              <Title level={2} style={{ color: 'white', margin: 0 }}>
-                Payment Error
-              </Title>
-              <Paragraph style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, marginTop: 8 }}>
-                {error}
-              </Paragraph>
-            </div>
-          </Card>
-
-          <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <Button 
-              type="primary" 
-              style={{ marginRight: 12 }} 
-              onClick={handleRetry}
-            >
+        <Card style={{ maxWidth: 500, textAlign: 'center', borderRadius: 16 }}>
+          <ExclamationCircleOutlined style={{ fontSize: 64, color: '#ff4d4f', marginBottom: 24 }} />
+          <Title level={3}>Payment Error</Title>
+          <Paragraph style={{ fontSize: 16, color: '#666', marginBottom: 32 }}>
+            {error}
+          </Paragraph>
+          <Space size="middle">
+            <Button type="primary" size="large" onClick={() => {
+              apiCallMade.current = false;
+              setError(null);
+              setLoading(true);
+              getPayUrlFromBe();
+            }}>
               Try Again
             </Button>
-            <Button 
-              type="default" 
-              onClick={() => window.history.back()}
-            >
+            <Button size="large" onClick={() => window.history.back()}>
               Go Back
             </Button>
-            <Paragraph style={{ color: '#666', marginTop: 16 }}>
-              Need help? Contact our support team at {contactData.email[0].email}
-            </Paragraph>
-          </div>
-        </div>
+          </Space>
+          <Paragraph style={{ color: '#666', marginTop: 24 }}>
+            Need help? <strong>{contactData.email[0].email}</strong>
+          </Paragraph>
+        </Card>
       </div>
     );
   }
 
   return (
     <div style={{ 
-      backgroundColor: '#f0f2f5',
+      backgroundColor: '#f5f5f5',
       minHeight: '100vh',
-      padding: '20px'
+      padding: 24,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }}>
-      <div style={{ 
-        width: '100%',
-        maxWidth: 1000, 
-        margin: '0 auto',
-        paddingTop: '40px'
-      }}>
-        <Card
-          style={{
-            borderRadius: 12,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%)',
-            color: 'white',
-            marginBottom: 24
-          }}
-        >
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            {redirecting ? (
-              <Spin 
-                indicator={<LoadingOutlined style={{ fontSize: 48, color: 'white' }} spin />} 
-                style={{ marginBottom: 16 }}
-              />
-            ) : (
-              <CreditCardOutlined 
-                style={{ 
-                  fontSize: 72, 
-                  color: '#52c41a',
-                  marginBottom: 16
-                }} 
-              />
-            )}
-            <Title level={2} style={{ color: 'white', margin: 0 }}>
-              {redirecting ? 'Redirecting to Payment Gateway' : 'Payment Gateway Ready'}
-            </Title>
-            <Paragraph style={{ color: 'rgba(255,255,255,0.8)', fontSize: 16, marginTop: 8 }}>
-              {redirecting 
-                ? `Redirecting in ${countdown} seconds...` 
-                : 'Click the button below to proceed to payment'
-              }
-            </Paragraph>
-          </div>
-        </Card>
-
-        <Card
-          style={{
-            borderRadius: 12,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-            marginBottom: 24
-          }}
-        >
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <Title level={4} style={{ marginBottom: 16 }}>
-              Payment Information
-            </Title>
-            <Paragraph style={{ color: '#666', marginBottom: 8 }}>
-              You will be redirected to our secure payment gateway
-            </Paragraph>
-            {paymentUrl && (
-              <Paragraph style={{ color: '#666', marginBottom: 24 }}>
-                <strong>Payment URL:</strong> {paymentUrl.length > 50 ? `${paymentUrl.substring(0, 50)}...` : paymentUrl}
-              </Paragraph>
-            )}
-            
-            <Alert
-              message="Secure Payment"
-              description="Your payment information is processed securely through our trusted payment gateway"
-              type="info"
-              showIcon
-              style={{ marginBottom: 24 }}
-            />
-
-            {!redirecting && paymentUrl && (
-              <Button 
-                type="primary" 
-                size="large"
-                onClick={handleManualRedirect}
-                style={{ 
-                  padding: '12px 40px',
-                  height: 'auto',
-                  fontSize: 16,
-                  borderRadius: 8
-                }}
-              >
-                Proceed to Payment
-              </Button>
-            )}
-
-            {redirecting && (
-              <Button 
-                type="default" 
-                onClick={() => {
-                  setRedirecting(false);
-                  setCountdown(5);
-                }}
-                style={{ marginTop: 16 }}
-              >
-                Cancel Auto-redirect
-              </Button>
-            )}
-          </div>
-        </Card>
-
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
-          <Paragraph style={{ color: '#666' }}>
-            Need help? Contact our support team at {contactData.email[0].email}
+      <div style={{ width: '100%', maxWidth: 600 }}>
+        {/* Redirect Status */}
+        <Card style={{
+          borderRadius: 16,
+          marginBottom: 24,
+          textAlign: 'center',
+          background: 'linear-gradient(135deg, #ff4d4f 0%, #16a085 100%)',
+          color: 'white',
+          padding: '40px 24px'
+        }}>
+          <Spin 
+            indicator={<LoadingOutlined style={{ fontSize: 56, color: 'white' }} spin />} 
+            style={{ marginBottom: 24 }}
+          />
+          <Title level={2} style={{ color: 'white', marginBottom: 16 }}>
+            Redirecting to Payment
+          </Title>
+          <Paragraph style={{ color: 'rgba(255,255,255,0.9)', fontSize: 18 }}>
+            Redirecting in <strong>{countdown}</strong> {countdown === 1 ? 'second' : 'seconds'}
           </Paragraph>
-          <Button 
-            type="default" 
-            style={{ marginTop: 16 }} 
-            onClick={() => window.history.back()}
-          >
-            Go Back
-          </Button>
+        </Card>
+
+        {/* Info Card */}
+        <Card style={{ borderRadius: 16, marginBottom: 24 }}>
+          <Alert
+            message="Secure Payment"
+            description="You will be redirected to our secure payment gateway"
+            type="info"
+            showIcon
+            icon={<SafetyOutlined />}
+            style={{ marginBottom: 24 }}
+          />
+          
+          <div style={{ textAlign: 'center' }}>
+            <Button 
+              type="primary" 
+              size="large"
+              onClick={handleRedirectNow}
+              icon={<CreditCardOutlined />}
+              style={{ 
+                padding: '12px 48px',
+                height: 'auto',
+                fontSize: 16,
+                borderRadius: 8
+              }}
+            >
+              Proceed Now
+            </Button>
+          </div>
+        </Card>
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center' }}>
+          <Space size="middle">
+            <Button type="link" onClick={() => window.history.back()}>
+              ← Go Back
+            </Button>
+            <Paragraph style={{ marginBottom: 0 }}>
+              Help: <strong>{contactData.email[0].email}</strong>
+            </Paragraph>
+          </Space>
         </div>
       </div>
     </div>

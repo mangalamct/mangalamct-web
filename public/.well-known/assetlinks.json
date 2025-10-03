@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mangalamct.mct_app",
+      "sha256_cert_fingerprints": [
+        "A3:DB:19:41:B9:6B:03:E3:58:91:1E:CF:3E:65:99:3B:19:3D:0D:E4:6F:D3:58:7E:1D:9F:5F:FA:C1:1C:80:C0"
+      ]
+    }
+  }
+]
