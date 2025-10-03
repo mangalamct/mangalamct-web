@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { NextResponse } from 'next/server'
+import { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest } from 'pg-sdk-node';
+
 import { getAccessToken, sendDonationEmail } from '../common/CommonFun';
 import { admin, db, FieldValue } from '../admin';
 import { PHONEPE_CONFIG } from '../common/constent';
@@ -19,6 +21,8 @@ const encryptData = (data) => {
     return null;
   }
 };
+
+
 
 // Utility function to create URL with encrypted data
 const createRedirectUrl = (baseUrl, data, isSuccess = true) => {
@@ -41,10 +45,39 @@ const createRedirectUrl = (baseUrl, data, isSuccess = true) => {
   return url.toString();
 };
 
+
+// Retrieve configuration securely from environment variables
+const clientId = process.env.PHONE_PAY_CLIENT_ID;
+const clientSecret = process.env.PHONE_PAY_CLIENT_SECRET;
+// Ensure clientVersion is parsed as a number if stored as a string
+const clientVersion = parseInt(process.env.PHONE_PAY_CLIENT_VERSION || '1', 10);
+const env = process.env.PHONEPE_ENV === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX;
+// Initialize the client once and reuse the instance (Singleton Pattern)
+let phonePeClientInstance;
+
+try {
+    // StandardCheckoutClient.getInstance ensures only one client is initialized
+    phonePeClientInstance = StandardCheckoutClient.getInstance(
+        clientId,
+        clientSecret,
+        clientVersion,
+        env
+    );
+} catch (error) {
+    console.error("PhonePe Client Initialization Error:", error);
+    // Note: In a real app, you might crash the process here if config is mandatory
+}
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const merchantTransactionId = searchParams.get('id');
+ 
 
+  const merchantTransactionId = searchParams.get('id');
+    if (!phonePeClientInstance) {
+        return NextResponse.json(
+            { success: false, message: 'Payment gateway configuration error.' },
+            { status: 500 }
+        );
+    }
   if (!merchantTransactionId) {
     const errorData = {
       error: 'Missing transaction ID',
@@ -58,24 +91,14 @@ export async function GET(request) {
   console.log("Checking Payment Status for ID:", merchantTransactionId);
 
   try {
-    // 1️⃣ Get PhonePe Access Token
-    const access_token = await getAccessToken();
-    if (!access_token) throw new Error('Access token not received');
 
     // 2️⃣ Call PhonePe API
-    const response = await axios.get(
-      `${PHONEPE_CONFIG.STATUS_CHECK_URL}/${merchantTransactionId}/status`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `O-Bearer ${access_token}`,
-        },
-      }
-    );
+  const response= await phonePeClientInstance.getOrderStatus(merchantTransactionId)
 
-    console.log("PhonePe status response:", response.data);
 
-    const result = response.data;
+    console.log("PhonePe status response lalit:", response);
+
+    const result = response;
     const payment = result.paymentDetails?.[0] || {};
 
     // 3️⃣ Build update payload
