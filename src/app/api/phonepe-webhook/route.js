@@ -58,10 +58,10 @@ export async function POST(request) {
 
   // 1. Read Raw Body String
   const rawBodyString = await request.text();
-
+console.log(rawBodyString,'rawBodyString')
   // 2. Get Authorization Header
   const receivedAuthHeader = request.headers.get('authorization');
-
+console.log(receivedAuthHeader,"receivedAuthHeader")
   // Basic credential check
   if (!receivedAuthHeader || !configuredUsername || !configuredPassword) {
     console.error("Missing Auth Header or Server Credentials.");
@@ -82,7 +82,7 @@ export async function POST(request) {
     console.error('PhonePe Webhook Validation Failed:', error.message);
     return new NextResponse('Unauthorized: Invalid Callback Signature', { status: 401 });
   }
-
+console.log(callbackResponse,"callbackResponse")
   // --- Step 4: Process Validated Payload and Update Database ---
   try {
     const event = callbackResponse.event || callbackResponse.type;

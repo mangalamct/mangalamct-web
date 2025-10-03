@@ -1,4 +1,4 @@
-import { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest } from 'pg-sdk-node';
+import { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest, CreateSdkOrderRequest } from 'pg-sdk-node';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { admin, db, FieldValue } from '../admin';
@@ -72,7 +72,7 @@ export async function POST(req) {
             .build();
 
         // 4. Build the Payment Request
-        const request = StandardCheckoutPayRequest.builder()
+        const request = CreateSdkOrderRequest.builder()
             .merchantOrderId(merchantOrderId)
             .amount(amountInPaise) // Amount in paise
             .redirectUrl(redirectUrl+`?id=${merchantOrderId}`)
