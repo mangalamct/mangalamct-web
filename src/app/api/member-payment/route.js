@@ -10,7 +10,7 @@ const clientSecret = process.env.PHONE_PAY_CLIENT_SECRET;
 // Ensure clientVersion is parsed as a number if stored as a string
 const clientVersion = parseInt(process.env.PHONE_PAY_CLIENT_VERSION || '1', 10);
 const env = process.env.PHONEPE_ENV === 'PRODUCTION' ? Env.PRODUCTION : Env.SANDBOX;
-const redirectUrl = "https://www.merchant.com/redirect";
+const redirectUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/api/payment-status`;
 // Initialize the client once and reuse the instance (Singleton Pattern)
 let phonePeClientInstance;
 
@@ -73,7 +73,7 @@ export async function POST(req) {
         const request = StandardCheckoutPayRequest.builder()
             .merchantOrderId(merchantOrderId)
             .amount(amountInPaise) // Amount in paise
-            .redirectUrl(redirectUrl)
+            .redirectUrl(redirectUrl+`?id=${merchantOrderId}`)
             .metaInfo(metaInfo)
             .build();
 
