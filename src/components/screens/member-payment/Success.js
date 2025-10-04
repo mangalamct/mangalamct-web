@@ -19,7 +19,7 @@ const Success = () => {
   useEffect(() => {
 
     setTimeout(() => {
-        window.location.href = `mangalamct://screens/members/PaymentStatusScreen?status=success&id=${searchParams.get('id')}`;
+        window.location.href = `mangalamct:///screens/members/PaymentStatusScreen?status=success&id=${searchParams.get('id')}`;
       }, 5000);
     // fetchPaymentData();
   }, [searchParams]);
@@ -29,7 +29,7 @@ const Success = () => {
   };
 const handleGoBack = () => {
   const transactionId = searchParams.get('id');
-  window.location.href = `mangalamct://screens/members/PaymentStatusScreen/?status=success&id=${transactionId}`;
+  window.location.href = `mangalamct:///screens/members/PaymentStatusScreen/?status=success&id=${transactionId}`;
 };
 
   if (loading) {

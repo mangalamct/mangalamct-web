@@ -1,4 +1,4 @@
-import { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest, CreateSdkOrderRequest } from 'pg-sdk-node';
+import { StandardCheckoutClient, Env, MetaInfo, StandardCheckoutPayRequest } from 'pg-sdk-node';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { admin, db, FieldValue } from '../admin';
@@ -35,8 +35,6 @@ try {
  * @returns {NextResponse} - JSON response containing the PhonePe checkout URL or an error.
  */
 export async function POST(req) {
-
-  
     if (!phonePeClientInstance) {
         return NextResponse.json(
             { success: false, message: 'Payment gateway configuration error.' },
@@ -46,7 +44,7 @@ export async function POST(req) {
     
     try {
         // 1. Parse the request body (e.g., get amount or product info from the frontend)
-        const { amount,memberData,payFrom,userId } = await req.json();
+        const { amount,memberData,payFrom,userId,transactionId } = await req.json();
 
         if (!amount || amount <= 0) {
              return NextResponse.json(
@@ -59,7 +57,7 @@ export async function POST(req) {
         const amountInPaise = Math.round(parseFloat(amount) * 100);
 
         // 2. Generate a unique Merchant Order ID
-        const merchantOrderId = `TXT-${randomUUID()}`;
+        const merchantOrderId =transactionId
         
         // The final redirect URL where the user lands after payment
         // We append the order ID to fetch status securely later
@@ -72,7 +70,7 @@ export async function POST(req) {
             .build();
 
         // 4. Build the Payment Request
-        const request = CreateSdkOrderRequest.builder()
+        const request = StandardCheckoutPayRequest.builder()
             .merchantOrderId(merchantOrderId)
             .amount(amountInPaise) // Amount in paise
             .redirectUrl(redirectUrl+`?id=${merchantOrderId}`)
@@ -82,7 +80,7 @@ export async function POST(req) {
         // 5. Call the PhonePe Pay API
         console.log(`Initiating payment for Order: ${merchantOrderId}`);
         const response = await phonePeClientInstance.pay(request);
-console.log(response,"response")
+
         // 6. Return the redirect URL to the frontend
         if (response && response.redirectUrl) {
             // In a real application, save the order details (including merchantOrderId) to your database here
@@ -94,6 +92,7 @@ registrationNumber:memberData?.memberRegNo || 'N/A',
  amount:amount,
  payFrom:'agent',
   orderId,
+  transactionProcessed:false,
   status: 'initiated',
   createdAt: FieldValue.serverTimestamp(),
 });
@@ -103,6 +102,7 @@ userId:userId,
 memberData:memberData,
  amount:amount,
  payFrom:'member',
+  transactionProcessed:false,
   orderId:merchantOrderId,
   status: 'initiated',
   createdAt: FieldValue.serverTimestamp(),

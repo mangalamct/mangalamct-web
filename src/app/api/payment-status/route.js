@@ -117,11 +117,11 @@ export async function GET(request) {
     };
 
     // 4️⃣ Reference the document in Firestore
-    // const paymentDocRef = db.collection('paymentInitiate').doc(merchantTransactionId);
+    const paymentDocRef = db.collection('paymentInitiate').doc(merchantTransactionId);
 
     // 5️⃣ Update Firestore and decide redirect
     if (result.state === "COMPLETED") {
-      // await paymentDocRef.update(updateData);
+      await paymentDocRef.update(updateData);
 
       const redirectUrl = createRedirectUrl(successUrl, {
         ...result,
@@ -131,7 +131,7 @@ export async function GET(request) {
       return NextResponse.redirect(redirectUrl, { status: 303 });
 
     } else if (result.state === "PENDING") {
-      // await paymentDocRef.update(updateData);
+      await paymentDocRef.update(updateData);
 
       const redirectUrl = createRedirectUrl(pendingUrl, {
         ...result,
@@ -144,12 +144,12 @@ export async function GET(request) {
       // FAILED or other state
       const failureData = {
         ...updateData,
+         transactionId: merchantTransactionId || payment.transactionId,
         errorCode: result.responseCode || 'PAYMENT_FAILED',
         errorMessage: result.responseCodeDescription || 'Payment could not be processed',
       };
 
-      // await paymentDocRef.update(failureData);
-
+      await paymentDocRef.update(failureData);
       const redirectUrl = createRedirectUrl(failureUrl, failureData, false);
       return NextResponse.redirect(redirectUrl, { status: 303 });
     }

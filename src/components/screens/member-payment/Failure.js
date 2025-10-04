@@ -11,7 +11,7 @@ const Failure = () => {
 
   const handleGoBack = () => {
     const transactionId = searchParams.get('id');
-    window.location.href = `mangalamct://(modals)/agent/PaymentStatusScreen/?status=failure&id=${transactionId}`;
+    window.location.href = `mangalamct:///screens/members/PaymentStatusScreen/?status=success&id=${transactionId}`
   };
 
   return (
