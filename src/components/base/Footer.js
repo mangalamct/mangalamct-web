@@ -54,6 +54,7 @@ const Footer = () => {
     { name: 'Privacy Policy', href: '/privacy-policy' },
     { name: 'Terms of Service', href: '/terms-of-service' },
     { name: 'Refund Policy', href: '/refund-policy' },
+    { name: 'Shipping & Delivery Policy', href: '/shipping-and-delivery' }
     // { name: 'Annual Reports', href: '/' },
     // { name: 'Financial Transparency', href: '/' }
   ];
