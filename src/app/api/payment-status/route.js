@@ -37,7 +37,9 @@ const createRedirectUrl = (baseUrl, data, isSuccess = true) => {
   if (data.transactionId) {
     url.searchParams.append('id', data.transactionId);
   }
-  
+    if (data.programId) {
+    url.searchParams.append('programId', data.programId);
+  }
   if (!isSuccess && data.errorCode) {
     url.searchParams.append('error', data.errorCode);
   }
@@ -72,6 +74,7 @@ export async function GET(request) {
  
 
   const merchantTransactionId = searchParams.get('id');
+  const programId = searchParams.get('programId');
     if (!phonePeClientInstance) {
         return NextResponse.json(
             { success: false, message: 'Payment gateway configuration error.' },
@@ -95,9 +98,6 @@ export async function GET(request) {
     // 2️⃣ Call PhonePe API
   const response= await phonePeClientInstance.getOrderStatus(merchantTransactionId)
 
-
-    console.log("PhonePe status response lalit:", response);
-
     const result = response;
     const payment = result.paymentDetails?.[0] || {};
 
@@ -117,7 +117,11 @@ export async function GET(request) {
     };
 
     // 4️⃣ Reference the document in Firestore
-    const paymentDocRef = db.collection('paymentInitiate').doc(merchantTransactionId);
+    const paymentDocRef =  db
+  .collection("programs")
+  .doc(programId)
+  .collection("paymentInitiate")
+  .doc(merchantTransactionId)
 
     // 5️⃣ Update Firestore and decide redirect
     if (result.state === "COMPLETED") {
@@ -126,6 +130,7 @@ export async function GET(request) {
       const redirectUrl = createRedirectUrl(successUrl, {
         ...result,
         transactionId: merchantTransactionId || payment.transactionId,
+        programId:programId
       }, true);
 
       return NextResponse.redirect(redirectUrl, { status: 303 });
@@ -136,6 +141,7 @@ export async function GET(request) {
       const redirectUrl = createRedirectUrl(pendingUrl, {
         ...result,
         transactionId: merchantTransactionId || payment.transactionId,
+                programId:programId
       }, 'pending');
 
       return NextResponse.redirect(redirectUrl, { status: 303 });
@@ -145,6 +151,7 @@ export async function GET(request) {
       const failureData = {
         ...updateData,
          transactionId: merchantTransactionId || payment.transactionId,
+                 programId:programId,
         errorCode: result.responseCode || 'PAYMENT_FAILED',
         errorMessage: result.responseCodeDescription || 'Payment could not be processed',
       };
@@ -166,7 +173,10 @@ export async function GET(request) {
 
     try {
       // Optionally log error to Firestore
-      await db.collection('paymentInitiate').doc(merchantTransactionId).update({
+      await db.collection("programs")
+  .doc(programId)
+  .collection("paymentInitiate")
+  .doc(merchantTransactionId).update({
         status: 'ERROR',
         errorCode: errorData.errorCode,
         errorMessage: errorData.errorMessage,
@@ -184,14 +194,15 @@ export async function GET(request) {
 // Optional: Add a separate endpoint to fetch payment status (for AJAX calls)
 export async function POST(request) {
   try {
-    const { transactionId } = await request.json();
+    const { transactionId,programId } = await request.json();
     
     if (!transactionId) {
       return NextResponse.json({ error: 'Transaction ID is required' }, { status: 400 });
     }
 
     // Fetch from Firestore
-    const doc = await db.collection("paymentInitiate").doc(transactionId).get();
+    const doc = await db.collection("programs")
+  .doc(programId).collection("paymentInitiate").doc(transactionId).get();
     
     if (!doc.exists) {
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 });

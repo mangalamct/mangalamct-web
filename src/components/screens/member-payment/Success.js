@@ -15,11 +15,11 @@ const Success = () => {
   // const [user] = useAuthState(auth);
   const router = useRouter();
   const searchParams = useSearchParams();
-
+console.log(searchParams,'searchParams')
   useEffect(() => {
 
     setTimeout(() => {
-        window.location.href = `mangalamct:///screens/members/PaymentStatusScreen?status=success&id=${searchParams.get('id')}`;
+        window.location.href = `mangalamct:///screens/members/PaymentStatusScreen?status=success&id=${searchParams.get('id')}&programId=${searchParams.get('programId')}`;
       }, 5000);
     // fetchPaymentData();
   }, [searchParams]);
@@ -29,7 +29,7 @@ const Success = () => {
   };
 const handleGoBack = () => {
   const transactionId = searchParams.get('id');
-  window.location.href = `mangalamct:///screens/members/PaymentStatusScreen/?status=success&id=${transactionId}`;
+  window.location.href = `mangalamct:///screens/members/PaymentStatusScreen/?status=success&id=${transactionId}&programId=${searchParams.get('programId')}`;
 };
 
   if (loading) {

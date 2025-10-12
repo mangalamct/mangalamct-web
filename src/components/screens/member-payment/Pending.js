@@ -11,7 +11,7 @@ const Pending = () => {
 
   const handleGoBack = () => {
     const transactionId = searchParams.get('id');
-    window.location.href = `mangalamct:///screens/members/PaymentStatusScreen/?status=success&id=${transactionId}`;
+    window.location.href = `mangalamct:///screens/members/PaymentStatusScreen/?status=success&id=${transactionId}&programId=${searchParams.get('programId')}`;
   };
 
   return (

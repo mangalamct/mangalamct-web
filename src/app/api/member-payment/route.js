@@ -44,7 +44,7 @@ export async function POST(req) {
     
     try {
         // 1. Parse the request body (e.g., get amount or product info from the frontend)
-        const { amount,memberData,payFrom,userId,transactionId } = await req.json();
+        const { amount,memberData,payFrom,userId,transactionId,programId } = await req.json();
 
         if (!amount || amount <= 0) {
              return NextResponse.json(
@@ -66,14 +66,14 @@ export async function POST(req) {
         // 3. Optional Metadata (as in your original snippet)
         const metaInfo = MetaInfo.builder()
             .udf1(userId)
-            .udf2(payFrom)
+            .udf2(payFrom).udf3(programId)
             .build();
 
         // 4. Build the Payment Request
         const request = StandardCheckoutPayRequest.builder()
             .merchantOrderId(merchantOrderId)
             .amount(amountInPaise) // Amount in paise
-            .redirectUrl(redirectUrl+`?id=${merchantOrderId}`)
+            .redirectUrl(redirectUrl+`?id=${merchantOrderId}&programId=${programId}`)
             .metaInfo(metaInfo)
             .build();
 
@@ -97,16 +97,23 @@ registrationNumber:memberData?.memberRegNo || 'N/A',
   createdAt: FieldValue.serverTimestamp(),
 });
     }else{
-    await db.collection("paymentInitiate").doc(merchantOrderId).set({
-userId:userId,
-memberData:memberData,
- amount:amount,
- payFrom:'member',
-  transactionProcessed:false,
-  orderId:merchantOrderId,
-  status: 'initiated',
-  createdAt: FieldValue.serverTimestamp(),
-});
+   
+await db
+  .collection("programs")
+  .doc(programId)
+  .collection("paymentInitiate")
+  .doc(merchantOrderId)
+  .set({
+    userId: userId,
+    memberData: memberData,
+    programId: programId,
+    amount: amount,
+    payFrom: 'member',
+    transactionProcessed: false,
+    orderId: merchantOrderId,
+    status: 'initiated',
+    createdAt: FieldValue.serverTimestamp(),
+  });
     }
             return NextResponse.json({
                 success: true,
